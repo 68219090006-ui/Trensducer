@@ -1,36 +1,34 @@
 #include <Arduino.h>
+#include <DHT.h>
 
-<<<<<<< Updated upstream
-const int ledPin = LED_BUILTIN;
-const unsigned long blinkDelayMs = 500;
+#define DHTPIN 4
+#define DHTTYPE DHT11
+
+DHT dht(DHTPIN, DHTTYPE);
 
 void setup() {
-  pinMode(ledPin, OUTPUT);
+	Serial.begin(9600);
+	dht.begin();
+	Serial.println("Start reading DHT11 sensor...");
 }
 
 void loop() {
-  digitalWrite(ledPin, HIGH);
-=======
-const int led1Pin = 12;
-const int led2Pin = 13;
-const unsigned long blinkDelayMs = 500;
+	float humidity = dht.readHumidity();
+	float temperature = dht.readTemperature();
 
-void setup() {
-  pinMode(led1Pin, OUTPUT);
-  pinMode(led2Pin, OUTPUT);
-}
+	if (isnan(humidity) || isnan(temperature)) {
+		Serial.println("Failed to read from DHT11 sensor");
+	} else {
+		Serial.print("Temperature: ");
+		Serial.print(temperature);
+		Serial.println(" C");
 
-void loop() {
-  digitalWrite(led1Pin, HIGH);
-  digitalWrite(led2Pin, LOW);
->>>>>>> Stashed changes
-  delay(blinkDelayMs);
+		Serial.print("Humidity: ");
+		Serial.print(humidity);
+		Serial.println(" %");
 
-  digitalWrite(led1Pin, LOW);
-  digitalWrite(led2Pin, HIGH);
-  delay(blinkDelayMs);
-<<<<<<< Updated upstream
+		Serial.println("--------------------");
+	}
+
+	delay(2000);
 }
-=======
-}
->>>>>>> Stashed changes
