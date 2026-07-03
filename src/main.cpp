@@ -3,8 +3,9 @@
 #include <LiquidCrystal_I2C.h>
 
 // KY-021 (Reed Switch)
-// ขา S ต่อ D2 (ตามเอกสาร)
+// Wiring อ้างอิง test/design.md: S -> D7
 static const int sensorPin = 7;
+
 
 // LCD 16x2 แบบ I2C (ตาม design.md)
 static const uint8_t lcdAddr = 0x27;
