@@ -1,0 +1,40 @@
+Prototype Idea: KY-021 + LCD 16x2 (I2C) — Industrial Starter Sensor
+
+ไอเดียประยุกต์ (A) ตรวจจับการเปิด-ปิดฝา/ประตู/กล่อง (Door/Open sensor)
+
+1) วัตถุประสงค์
+- ใช้ KY-021 ตรวจจับว่าฝา/ประตู/กล่องอยู่ในสถานะ OPEN หรือ CLOSED
+- แสดงสถานะและสถิติพื้นฐานบน LCD 16x2
+
+2) Wiring อ้างอิง test/design.md
+- KY-021: S -> D7, VCC -> 5V, GND -> GND
+- LCD 16x2 (I2C): SDA -> A4, SCL -> A5
+- LCD Address: 0x27
+
+3) UX บน LCD 16x2 (ใช้งานจริง)
+- บรรทัด 0: OPEN / CLOSED
+- บรรทัด 1: Count: XXXX  (นับจำนวนครั้งที่สถานะเปลี่ยน)
+  (ทางเลือกแทน Count: Last: ON hh:mm:ss)
+
+4) Challenge ที่ต้องพิสูจน์ก่อนใช้งานจริง
+- HIGH/LOW ของ KY-021 อาจกลับกัน:
+  *ต้องเช็คจาก Serial ว่าแม่เหล็กมาแล้วค่าเป็น HIGH หรือ LOW
+  *จากนั้นกำหนดเงื่อนไข OPEN/CLOSED ให้ถูก
+- Reed switch/bounce:
+  *ใส่ debounce (เช่นยืนยันว่า state คงที่อย่างน้อย 30–50ms)
+  *นับ event เฉพาะตอน state “เปลี่ยนจริง” (edge-trigger)
+- LCD refresh:
+  *อัปเดต LCD เฉพาะตอน state เปลี่ยน เพื่อลดกระพริบ
+- Padding 16 ตัวอักษร:
+  *ทุกครั้งที่พิมพ์ ให้เคลียร์/เติมช่องว่างให้เต็ม 16 ตัวอักษรต่อบรรทัด
+
+5) วิธีทดสอบแบบต้นแบบ
+- เปิด Serial Monitor เพื่อตรวจ raw digital value
+- นำแม่เหล็กเข้า/ออกตำแหน่งเดิมซ้ำ ๆ
+- ตรวจว่า LCD เปลี่ยน OPEN/CLOSED ตรงเวลา และ Count เพิ่มแค่ครั้งละ event
+
+6) เกณฑ์ยอมรับ (Acceptance)
+- ไม่เด้งนับซ้ำจาก bounce (Count เพิ่มตามจำนวนรอบที่ตั้งใจเท่านั้น)
+- LCD อ่านง่าย ไม่กระพริบ
+- Wiring ถูก (KY-021 S ไปที่ขาที่กำหนด และ LCD addr=0x27)
+
