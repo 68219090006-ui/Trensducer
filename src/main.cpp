@@ -60,31 +60,27 @@ void loop() {
     stableState = raw;
     eventCount++;
 
-    const char* magnetText = magnetStatusFromValue(stableState);
+    // Serial monitor: แสดงสถานะเป็น ON/OFF (ตามโจทย์)
 
-    // Serial monitor: แสดง raw/stable + ข้อความ
-    Serial.print(F("raw="));
+    // Serial: แสดงสถานะเป็น ON/OFF (ตามโจทย์)
+    const bool magnetDetected = (stableState == HIGH);
+    Serial.print(F("Magnet="));
+    Serial.print(magnetDetected ? F("ON") : F("OFF"));
+    Serial.print(F(" raw="));
     Serial.print(raw);
     Serial.print(F(" stable="));
     Serial.print(stableState);
-    Serial.print(F(" -> "));
-    Serial.print(magnetText);
     Serial.print(F(" | events="));
     Serial.println(eventCount);
 
-    // LCD 16x2 (อัปเดตเฉพาะตอนสถานะเปลี่ยน)
-    // บรรทัด 0: OPEN/CLOSED (ใช้ชื่อเดียวกับต้นแบบ)
-    const bool isOpen = (stableState == HIGH); // เปลี่ยนค่าได้ถ้า HIGH/LOW กลับกัน
-    lcd.setCursor(0, 0);
-    if (isOpen) {
-      lcd.print(F("OPEN           ")); // เติมให้เต็ม 16 ตัวอักษร
-    } else {
-      lcd.print(F("CLOSED         ")); // เติมให้เต็ม 16 ตัวอักษร
-    }
 
-    // บรรทัด 1: Count
+    // LCD 16x2 (อัปเดตเฉพาะตอนสถานะเปลี่ยน)
+    // ตามที่กำหนด: ไม่แสดงสถานะ ON/OFF บนจอ LCD
+    // แสดงเฉพาะ Count
+
     lcd.setCursor(0, 1);
     lcd.print(F("Count:"));
+
     // ช่องว่าง/ตัวเลขให้เต็ม 16 ตัวอักษร
     // Count: + space 6 ตำแหน่ง -> รวมให้ครบ 16 ด้วย padding
     unsigned long n = eventCount;
