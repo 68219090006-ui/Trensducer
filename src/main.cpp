@@ -3,8 +3,9 @@
 #include <LiquidCrystal_I2C.h>
 
 // KY-021 (Reed Switch)
-// Wiring อ้างอิง test/design.md: S -> D7
+// Wiring: S -> D7 (Arduino Uno)
 static const int sensorPin = 7;
+
 
 
 // LCD 16x2 แบบ I2C (ตาม design.md)
@@ -32,32 +33,71 @@ void setup() {
 }
 
 static const char* magnetStatusFromValue(int v) {
-  // ตีความตามที่ผู้ใช้อนุญาต: HIGH = Magnet detected
-  return (v == HIGH) ? "Magnet detected" : "No magnet";
+  // ตีความตามหลักทั่วไป: HIGH = Magnet detected
+  return (v == HIGH) ? "Magnet" : "NoMag";
 }
 
 void loop() {
-  int sensorValue = digitalRead(sensorPin);
-  const char* msg = magnetStatusFromValue(sensorValue);
+  // Debounce (กันสัญญาณ reed switch เด้ง/สั่น)
+  const unsigned long debounceMs = 50; // ตามต้นแบบ 30–50ms
 
-  // Serial
-  Serial.print(F("sensor="));
-  Serial.print(sensorValue);
-  Serial.print(F(" -> "));
-  Serial.println(msg);
+  static int lastRaw = LOW;
+  static int stableState = LOW;
+  static unsigned long lastChangeMs = 0;
 
-  // LCD (สองบรรทัด)
-  lcd.setCursor(0, 0);
-  lcd.print("Magnet:");
-  // เติมช่องว่างให้ลบเศษข้อความ
-  lcd.print("       ");
+  // event counter (นับจำนวนครั้งที่สถานะเปลี่ยนจริง)
+  static unsigned long eventCount = 0;
 
-  lcd.setCursor(0, 1);
-  // แสดงข้อความให้พอดี 16 ตัวอักษร (ตัด/บวกเว้นว่างอัตโนมัติด้วยการพิมพ์ซ้ำ)
-  lcd.print("                ");
-  lcd.setCursor(0, 1);
-  lcd.print(msg);
+  const int raw = digitalRead(sensorPin);
 
-  delay(200);
+  if (raw != lastRaw) {
+    lastRaw = raw;
+    lastChangeMs = millis();
+  }
+
+  // ยอมรับว่า state เสถียรเมื่อ raw คงที่พอ
+  if ((millis() - lastChangeMs) >= debounceMs && raw != stableState) {
+    stableState = raw;
+    eventCount++;
+
+    const char* magnetText = magnetStatusFromValue(stableState);
+
+    // Serial monitor: แสดง raw/stable + ข้อความ
+    Serial.print(F("raw="));
+    Serial.print(raw);
+    Serial.print(F(" stable="));
+    Serial.print(stableState);
+    Serial.print(F(" -> "));
+    Serial.print(magnetText);
+    Serial.print(F(" | events="));
+    Serial.println(eventCount);
+
+    // LCD 16x2 (อัปเดตเฉพาะตอนสถานะเปลี่ยน)
+    // บรรทัด 0: OPEN/CLOSED (ใช้ชื่อเดียวกับต้นแบบ)
+    const bool isOpen = (stableState == HIGH); // เปลี่ยนค่าได้ถ้า HIGH/LOW กลับกัน
+    lcd.setCursor(0, 0);
+    if (isOpen) {
+      lcd.print(F("OPEN           ")); // เติมให้เต็ม 16 ตัวอักษร
+    } else {
+      lcd.print(F("CLOSED         ")); // เติมให้เต็ม 16 ตัวอักษร
+    }
+
+    // บรรทัด 1: Count
+    lcd.setCursor(0, 1);
+    lcd.print(F("Count:"));
+    // ช่องว่าง/ตัวเลขให้เต็ม 16 ตัวอักษร
+    // Count: + space 6 ตำแหน่ง -> รวมให้ครบ 16 ด้วย padding
+    unsigned long n = eventCount;
+    // ลบข้อความเก่าให้หมดก่อนพิมพ์ตัวเลข
+    lcd.print(F("      ")); // 6 ช่องว่าง
+    lcd.setCursor(6, 1);
+    lcd.print(n);
+  }
+
+  delay(5);
 }
+
+
+
+
 
